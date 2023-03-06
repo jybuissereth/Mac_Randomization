@@ -4,6 +4,22 @@ import sys
 from collections import defaultdict
 
 def fctTempsOcc(filename,i2):
+    """
+    :param filename: path vers le fichier qui contient des lignes, chaque ligne a une adresse mac (name) separer par des ';'
+    :return: un dictionnaire qui possede comme clé des adresse Mac, et comme valeur (moyenne ifat, nombre d'occurence des trammes asscoiées, dernier temp d'arriver)
+
+        On initilise un dictionnaire vide ou on va stocker des adresses mac et le temps moyern  d'arriver,
+    nombre d'occurences des trames , dernier temps d'arriver.
+
+        Lit le fichier d'input qui  contient des lignes, chaque ligne a une adresse mac ( name) seprarer par une ";" et
+    de le dernier temps d'arrirver (time).
+
+        Si l'addresse mac est deja presente dans notre dictionnaire on fais un unpacking  puis on calcule the new temps
+    moyeen, le nbr d'occurences est  incrementer par 1.
++
+        Sinon si c'est la premiere fois bah le temps moyen d'arriver et le dernier tempos d'arriver sont les memes ainsi
+    que le  nbr d'occurence et dee 1 vue que c'est la premiere fois qu'on la rencontre.
+    """
     D = {}
     with open(filename, 'r') as text_file:
         i=0
@@ -34,6 +50,20 @@ def afficher(d):
         print(key, ":", value)
 
 def fctMoy(dict):
+  """
+    :param dict: un dictionnaire qui posséde comme clé des adresse MAC et comme valeur un tuple (moy ifat, nombre d'occurence, dernier temp d'arriver)
+    :return: un dictionnaire qui posséde comme clé des adresse MAC et comme valeur un tuple (moy ifat, ratio, signature de Burst)
+
+        Regroupe les moyennes, occurrence et dernier temps selon leurs burst
+    [ partie entière du dernier temps car 1 burst c’est 1 s et les trames sont d’une adresse mac dans 10ms]
+    si la partie entière inferieur de chaque dernier temps d'arriver est dans la moyenne d'IFAT
+    on prend le tableau des avg_times avec les meme derniers temps d'arrivés et on ajoute l'adresse
+    MAC dans le tableau, sinon on ajoute direct l'adresse MAC.
+
+        Ensuite on calcule le ratio (le nombre de d’occurence de trame d’une mac sur le nb totale de trame dans le burst)
+    et apres on associe chaque adresse mac a son burst et son ration et temp moyenne d'arriver.
+
+    """
     result = {}
     avg_times = {}
     for key, value in dict.items():
@@ -71,6 +101,15 @@ def fctMoy(dict):
     return abs(Dict[B][1]) + (Dict[B][1] / 2) * abs(Dict[B][0]) + abs((Dict[A][1]) + (Dict[A][1]) / 2) * abs(Dict[A][0])"""
 
 def fctDistance(Dict,A,B,c):
+
+   """
+    :param Dict: un dictionnaire qui posséde comme clé des adresse MAC et comme valeur un tuple (moyenne ifat, ratio, signature de Burst)
+    :param A: une adresse MAC
+    :param B: une adresse MAC
+    :param con: une constante fixé par l'utilisateur
+    :return: Distance entre l'adresse MAC A et l'adresse MAC B
+    """
+    
     if ((A == '1B:B5:91:85:11:ED' and B == '73:0D:9F:5A:5C:8E') or (
             B == '1B:B5:91:85:11:ED' and A == '73:0D:9F:5A:5C:8E')):
         a = c * (abs(Dict[B][1] - Dict[A][1]) + (((Dict[B][1] + Dict[A][1]) / 2) * abs(Dict[B][0] - Dict[A][0])))
@@ -79,6 +118,23 @@ def fctDistance(Dict,A,B,c):
     return c * (abs(Dict[B][1] - Dict[A][1]) + (((Dict[B][1] + Dict[A][1]) / 2) * abs(Dict[B][0] - Dict[A][0])))
 
 def fctDistanceMin(dict,S,list,dict2,t,c):
+ """
+    :param dict: Un dictionnaire qui posséde comme clé des adresse MAC et comme valeur un tuple (moyenne ifat, ratio, signature de Burst)
+    :param S: Une adresse Mac
+    :param list: List des adresses Mac déjà rencontré
+    :param dict2: Le dictionnaire d’association d’adresse mac(exclu l'addresse MAC S)
+    :param t: Parametre fixé l'utilisateur
+    :param c: Parametre fixé l'utilisateur
+    :return: Un dictionnaire
+
+    La fonction "min" prend en paramètre un dictionnaire, une adresse MAC S, une liste d'adresses MAC déjà rencontrées,
+    un second dictionnaire d'association d'adresses MAC (à l'exception de l'adresse MAC S), et les facteurs t et c qui
+    sont choisis par l'utilisateur en fonction du document. La fonction calcule la distance minimale entre S et
+    le groupe d'adresses MAC déjà rencontrées en utilisant la fonction "distance_deja_vue". Ensuite, elle compare
+    cette distance minimale au facteur t. Si la distance minimale est inférieure à t, cela signifie que S et le groupe
+    d'adresses MAC déjà rencontrées sont les mêmes adresses. Sinon, ils sont différents et l'adresse S est marquée
+    comme ayant déjà été rencontrée.
+    """
     s = ((key,fctDistance(dict,S,key,c)) for key in list)
     dmin = min(s, key=lambda x: x[1], default=(None, float('inf')))
     if dmin[1] < t:
@@ -96,6 +152,11 @@ def fctDistanceMin(dict,S,list,dict2,t,c):
     return dict2
 
 def compare_dictionnaires(dict1, dict2):
+"""
+    :param dict1: un dictionnaire qui associe deux adresses MAC, les données réel
+    :param dict2: un dictionnaire qui associe deux adresses MAC, les resultats de notre algorithme
+    :return: information sur le taux de success
+    """
     non_associe=0
     bonne_assoc=0
     mauvaise_assoc=0
